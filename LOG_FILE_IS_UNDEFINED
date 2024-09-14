@@ -595,3 +595,8 @@ com.fasterxml.jackson.databind.exc.InvalidDefinitionException: No serializer fou
 2024-09-14T16:42:08.006+07:00  INFO 24296 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : The following 1 profile is active: "dev"
 2024-09-14T16:42:09.224+07:00  WARN 24296 --- [d2csgame] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
 2024-09-14T16:42:10.565+07:00  INFO 24296 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : Started D2csgameApplication in 2.91 seconds (process running for 3.226)
+2024-09-14T16:42:33.410+07:00  INFO 10300 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : Starting D2csgameApplication using Java 17.0.8 with PID 10300 (D:\d2csgame\target\classes started by Admin in D:\d2csgame)
+2024-09-14T16:42:33.411+07:00 DEBUG 10300 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : Running with Spring Boot v3.3.3, Spring v6.1.12
+2024-09-14T16:42:33.411+07:00  INFO 10300 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : The following 1 profile is active: "dev"
+2024-09-14T16:42:34.599+07:00  WARN 10300 --- [d2csgame] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-09-14T16:42:35.977+07:00  INFO 10300 --- [d2csgame] [main] com.d2csgame.D2csgameApplication         : Started D2csgameApplication in 2.912 seconds (process running for 3.23)
