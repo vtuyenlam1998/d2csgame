@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: d2csgame
+  profiles:
+    active: dev
+server:
+  port: 8080
+file:
+  upload-dir:
+    product: D://upload/product/
+
