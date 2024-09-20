@@ -25,3 +25,8 @@ spring:
       max-file-size: 20MB
       file-size-threshold: 2KB
       max-request-size: 20MB
+  security:
+    jwt:
+      secret: AIsCx24wtFSn3A2ZQ7M93pPNWE7sS7n2Y2ApAdmX1xHBe3XFsnzi0bqCLkdjDy7jZ6TFMibS6WgXNwA8aF9lDg==
+      expiration: 86400000 # Hết hạn access token là 24 giờ
+      refreshExpiration: 2592000000 # Hết hạn refresh là 30 ngày
