@@ -1,6 +1,6 @@
 package com.d2csgame.entity;
 
-import com.d2csgame.entity.enumration.EOrderStatus;
+import com.d2csgame.entity.enumration.OrderStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,12 +23,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tbl_cart")
+@Table(name = "tbl_order")
 @Setter
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class Cart extends AbstractEntity<Long> {
+@NoArgsConstructor
+public class Order extends AbstractEntity<Long> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,6 +37,14 @@ public class Cart extends AbstractEntity<Long> {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private Set<CartItem> items = new HashSet<>();
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private Set<OrderItem> items = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private OrderStatus status;  // PENDING, PAID, SHIPPED, CANCELED, etc.
+
+    private LocalDateTime orderDate;
+    private LocalDateTime paymentDate;
+    private Double totalAmount;
 }

@@ -13,23 +13,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tbl_cart_item")
+@Table(name = "tbl_order_item")
 @Setter
 @Getter
-public class CartItem extends AbstractEntity<Long> {
+public class OrderItem extends AbstractEntity<Long> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
     private int quantity;
-
-    private Double price;
+    private Double price;  // Giá sản phẩm tại thời điểm mua
 }
