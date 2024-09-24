@@ -65,14 +65,6 @@ public class ProductServiceImpl implements ProductService {
         List<MainProductRes> productRes = products.stream()
                 .map(product -> {
                     MainProductRes res = modelMapper.map(product, MainProductRes.class);
-
-                    if (product.getCharacter() != null) {
-                        CharacterRes characterRes = modelMapper.map(product.getCharacter(), CharacterRes.class);
-                        res.setCharacter(characterRes);
-                    } else {
-                        res.setCharacter(null);
-                    }
-
                     Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElse(null);
                     if (image != null) {
                         ImageRes imageRes = modelMapper.map(image, ImageRes.class);
