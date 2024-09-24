@@ -1,6 +1,5 @@
 package com.d2csgame.config;
 
-import com.d2csgame.security.CustomUserDetailService;
 import com.d2csgame.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -33,18 +32,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfiguration()))
                 .authorizeHttpRequests(
-                        authorize -> authorize
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/api/v1/auth/logout").authenticated()
-                                .requestMatchers("/api/v1/**").authenticated()
-                                .anyRequest().permitAll()
-                )
-                .formLogin(formLogin -> formLogin
-                        .loginPage("/login")
-                        .loginProcessingUrl("/perform_login")
-                        .defaultSuccessUrl("/", true)
-                        .failureUrl("/login?error=true")
-                        .permitAll()
+                        authorize -> authorize.anyRequest().permitAll() // Cho phép tắt cả đường dẫn không yêu cầu authen
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // không cần lưu trạng thái người dùng vì JWT không cần trạng thái người dùng
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
