@@ -58,6 +58,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public PageResponse<?> findAll(Pageable pageable) {
         Page<Product> products = repository.findAll(pageable);
+        return toPageResponse(products);
+    }
+
+    private PageResponse<?> toPageResponse(Page<Product> products) {
         List<MainProductRes> productRes = products.stream()
                 .map(product -> {
                     MainProductRes res = modelMapper.map(product, MainProductRes.class);
@@ -69,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
                         res.setCharacter(null);
                     }
 
-                    Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException("Image not found"));
+                    Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElse(null);
                     if (image != null) {
                         ImageRes imageRes = modelMapper.map(image, ImageRes.class);
                         res.setImage(imageRes);
@@ -221,6 +225,12 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long productId) {
         log.info("Deleted");
         productRepository.deleteById(productId);
+    }
+
+    @Override
+    public PageResponse<?> getProductByCategory(Long tagId, Long characterId, Pageable pageable) {
+        Page<Product> products = productRepository.findByTagIdOrCharacterId(tagId,characterId,pageable);
+        return toPageResponse(products);
     }
 
 }

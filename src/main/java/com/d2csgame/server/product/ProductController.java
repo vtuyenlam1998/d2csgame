@@ -29,48 +29,65 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+
     @GetMapping
     public ResponseData<?> getAllProducts(@PageableDefault Pageable pageable) {
         try {
-        return new ResponseData<>(HttpStatus.OK.value(),"products list",productService.findAll(pageable));
+            return new ResponseData<>(HttpStatus.OK.value(), "list of product in homepage", productService.findAll(pageable));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
         }
     }
+
     @GetMapping("/{id}")
     public ResponseData<?> getProductById(@PathVariable Long id) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(),"product detail",productService.getProductById(id));
+            return new ResponseData<>(HttpStatus.OK.value(), "product detail", productService.getProductById(id));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
         }
     }
+
     @PostMapping()
     public ResponseData<?> createProduct(@Valid CreateProductReq req) {
         try {
             productService.createProduct(req);
-            return new ResponseData<>(HttpStatus.CREATED.value(),"product created");
+            return new ResponseData<>(HttpStatus.CREATED.value(), "product created");
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
         }
     }
+
     @PutMapping()
     public ResponseData<?> editProduct(@Valid EditProductReq req) {
         try {
             productService.editProduct(req);
-            return new ResponseData<>(HttpStatus.FOUND.value(),"product edited");
+            return new ResponseData<>(HttpStatus.FOUND.value(), "product edited");
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
     }
+
     @DeleteMapping("/{productId}")
     public ResponseData<?> deleteProduct(@PathVariable("productId") Long productId) {
         try {
             productService.deleteProduct(productId);
-            return new ResponseData<>(HttpStatus.NO_CONTENT.value(),"product deleted");
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "product deleted");
+        } catch (Exception e) {
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+
+        }
+    }
+
+    @GetMapping("/category")
+    public ResponseData<?> getProductByTag(@RequestParam(value = "tagId", required = false, defaultValue = "") Long tagId,
+                                           @RequestParam(value = "characterId", required = false, defaultValue = "") Long characterId,
+                                           @PageableDefault Pageable pageable) {
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), "list of product filter by category", productService.getProductByCategory(tagId, characterId, pageable));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 

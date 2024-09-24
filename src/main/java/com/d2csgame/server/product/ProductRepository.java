@@ -1,6 +1,8 @@
 package com.d2csgame.server.product;
 
 import com.d2csgame.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +22,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "OR c.name LIKE CONCAT('%', :keyword, '%') " +
             "OR t.name LIKE CONCAT('%', :keyword, '%'))")
     List<Product> findAll(@Param("keyword") String keyword);
+
+    @Query("SELECT p FROM Product p " +
+            "LEFT JOIN p.tags t " +
+            "LEFT JOIN p.character c " +
+            "WHERE (:tagId IS NULL OR t.id = :tagId) " +
+            "AND (:characterId IS NULL OR c.id = :characterId)")
+    Page<Product> findByTagIdOrCharacterId(Long tagId, Long characterId, Pageable pageable);
+
 }

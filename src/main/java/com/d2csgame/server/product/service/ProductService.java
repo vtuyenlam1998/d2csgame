@@ -22,4 +22,6 @@ public interface ProductService {
     void editProduct(EditProductReq req) throws IOException;
 
     void deleteProduct(Long productId);
+
+    PageResponse<?> getProductByCategory(Long tagId, Long characterId, Pageable pageable);
 }
