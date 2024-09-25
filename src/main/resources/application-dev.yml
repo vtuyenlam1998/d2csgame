@@ -4,10 +4,10 @@ spring:
       on-profile: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    #    username: ${MYSQL_USER:root}
-    #    password: ${MYSQL_PASSWORD:123456}
     username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:admin}
+    password: ${MYSQL_PASSWORD:123456}
+#    username: ${MYSQL_USER:root}
+#    password: ${MYSQL_PASSWORD:admin}
     url: ${MYSQL_URL:jdbc:mysql://localhost:3306/d2csgame?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
   jpa:
     hibernate:

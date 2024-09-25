@@ -3,6 +3,25 @@ spring:
     name: d2csgame
   profiles:
     active: dev
+  mail:
+    from: ${MAIL_FROM:tuyenlam987@gmail.com}
+    port: 587
+    host: smtp.gmail.com
+    username: tuyenlam987@gmail.com
+    password: hrbn jrsp ilkr gqwu
+    properties:
+      mail:
+        smtp:
+          auth: true
+          from: tuyenlam987@gmail.com
+          ssl:
+            enable: false
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+        debug: true
+    default-encoding: UTF-8
 server:
   port: 8080
 file:
