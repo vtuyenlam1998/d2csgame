@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Notification Demo</title>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<h1>Notification Demo</h1>
+
+<div>
+    <h3>Broadcast Notification</h3>
+    <input type="text" id="broadcastMessage" placeholder="Enter message">
+    <button onclick="sendBroadcast()">Send Broadcast</button>
+</div>
+
+<div>
+    <h3>Send to User</h3>
+    <input type="text" id="recipient" placeholder="Recipient (username)">
+    <input type="text" id="privateMessage" placeholder="Enter message">
+    <button onclick="sendToUser()">Send to User</button>
+</div>
+
+<h3>Notifications</h3>
+<ul id="notifications"></ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+
+            // Subscribe to broadcast notifications
+            stompClient.subscribe('/topic/notifications', function (notification) {
+                console.log('Received notification: ' + notification.body);
+                showNotification(JSON.parse(notification.body).message);
+            });
+
+            // Subscribe to private notifications
+            stompClient.subscribe('/queue/notifications', function (notification) {
+                console.log('Received notification: ' + notification.body);
+                showNotification(JSON.parse(notification.body).message);
+            });
+        });
+    }
+
+    function sendBroadcast() {
+        const message = document.getElementById('broadcastMessage').value;
+        stompClient.send("/app/notification/send", {}, JSON.stringify({ 'message': message, 'recipient': null }));
+    }
+
+    function sendToUser() {
+        const message = document.getElementById('privateMessage').value;
+        const recipient = document.getElementById('recipient').value;
+        stompClient.send("/app/notification/send", {}, JSON.stringify({ 'message': message, 'recipient': recipient }));
+    }
+
+    function showNotification(message) {
+        const notificationElement = document.createElement('li');
+        notificationElement.appendChild(document.createTextNode(message));
+        document.getElementById('notifications').appendChild(notificationElement);
+    }
+
+    connect();
+</script>
+</body>
+</html>

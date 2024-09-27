@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<div id="comments"></div>
+<div id="notifications"></div>
+
+<script type="text/javascript">
+    var stompClient = null;
+
+    function connect() {
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+
+            // Subscribe to comment topic
+            stompClient.subscribe('/topic/comments', function (comment) {
+                showComment(JSON.parse(comment.body));
+            });
+
+            // Subscribe to notification topic
+            stompClient.subscribe('/topic/notifications', function (notification) {
+                showNotification(JSON.parse(notification.body));
+            });
+        });
+    }
+
+    function showComment(comment) {
+        var commentsDiv = document.getElementById("comments");
+        var content = "<p><strong>" + comment.user + ":</strong> " + comment.comment + "</p>";
+        commentsDiv.innerHTML += content;
+    }
+
+    function showNotification(notification) {
+        var notificationsDiv = document.getElementById("notifications");
+        var content = "<p>Notification: " + notification.content + "</p>";
+        notificationsDiv.innerHTML += content;
+    }
+
+    // Gọi hàm kết nối khi tải trang
+    window.onload = function() {
+        connect();
+    };
+</script>
+</body>
+</html>
