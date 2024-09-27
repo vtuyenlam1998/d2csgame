@@ -24,14 +24,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +42,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,31 +59,83 @@ public class ProductServiceImpl implements ProductService {
     private final CharacterRepository characterRepository;
     private final TagRepository tagRepository;
     private final ModelMapper modelMapper;
+    //    private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
+//    private static final String HOMEPAGE_CACHE_KEY = "homepageProducts";
 
     @Value("${file.upload-dir.product}")
     private String uploadDir;
 
+//    private static final int PING_TIMEOUT_MILLI_SECONDS = 10; // Thay đổi thời gian chờ nếu cần
+//
+//    private boolean isRedisAvailable() {
+//        ExecutorService executor = Executors.newSingleThreadExecutor();
+//        Future<Boolean> future = executor.submit(() -> {
+//            try {
+//                return redisTemplate.getConnectionFactory().getConnection().ping() != null;
+//            } catch (Exception e) {
+//                return false;
+//            }
+//        });
+//
+//        try {
+//            return future.get(PING_TIMEOUT_MILLI_SECONDS, TimeUnit.MILLISECONDS);
+//        } catch (TimeoutException e) {
+//            return false; // Nếu không nhận được phản hồi trong thời gian quy định
+//        } catch (InterruptedException | ExecutionException e) {
+//            return false; // Nếu có lỗi xảy ra trong quá trình thực thi
+//        } finally {
+//            executor.shutdown();
+//        }
+//    }
+
     @Override
+    @Cacheable(value = "homepageProducts", key = "#pageable")
     public PageResponse<?> findAll(Pageable pageable) {
+        // Check if it's the first page (homepage)
+//        if (pageable.getPageNumber() == 0) {
+//            // Kiểm tra xem Redis có sẵn không
+//            try {
+//                // Check if cache exists for the homepage
+//                PageResponse<?> cachedPage = (PageResponse<?>) redisTemplate.opsForValue().get(HOMEPAGE_CACHE_KEY);
+//                if (cachedPage != null) {
+//                    return cachedPage; // Return cached response if available
+//                }
+//            } catch (Exception e) {
+//                // Log lỗi Redis, có thể không cần làm gì thêm ở đây
+//                log.error("Redis is not available", e);
+//            }
+//        }
+
+        // Fetch from database if not cached or if it's not the first page
         Page<Product> products = repository.findAll(pageable);
-        return toPageResponse(products);
+        PageResponse<?> response = toPageResponse(products);
+        // Cache the first page response in Redis
+//        if (pageable.getPageNumber() == 0) {
+//            // Kiểm tra xem Redis có sẵn không
+//            try {
+//                redisTemplate.opsForValue().set(HOMEPAGE_CACHE_KEY, response, Duration.ofHours(1)); // Cache for 1 hour
+//            } catch (Exception e) {
+//                // Log lỗi Redis, có thể không cần làm gì thêm ở đây
+//                log.error("Redis is not available", e);
+//            }
+//        }
+        return response;
     }
 
     private PageResponse<?> toPageResponse(Page<Product> products) {
-        List<MainProductRes> productRes = products.stream()
-                .map(product -> {
-                    MainProductRes res = modelMapper.map(product, MainProductRes.class);
-                    Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElse(null);
-                    if (image != null) {
-                        ImageRes imageRes = modelMapper.map(image, ImageRes.class);
-                        res.setImage(imageRes);
-                    } else {
-                        res.setImage(null);
-                    }
+        List<MainProductRes> productRes = products.stream().map(product -> {
+            MainProductRes res = modelMapper.map(product, MainProductRes.class);
+            Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElse(null);
+            if (image != null) {
+                ImageRes imageRes = modelMapper.map(image, ImageRes.class);
+                res.setImage(imageRes);
+            } else {
+                res.setImage(null);
+            }
 
-                    return res;
-                }).toList();
+            return res;
+        }).toList();
         return PageResponse.builder()
                 .items(productRes)
                 .total(products.getTotalElements())
@@ -88,26 +149,24 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<MainProductRes> findAll(String keyword) {
         List<Product> products = repository.findAll(keyword);
-        List<MainProductRes> productRes = products.stream()
-                .map(product -> {
-                    MainProductRes res = modelMapper.map(product, MainProductRes.class);
+        List<MainProductRes> productRes = products.stream().map(product -> {
+            MainProductRes res = modelMapper.map(product, MainProductRes.class);
 
-                    Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException("Image not found"));
-                    if (image != null) {
-                        ImageRes imageRes = modelMapper.map(image, ImageRes.class);
-                        res.setImage(imageRes);
-                    } else {
-                        res.setImage(null);
-                    }
-                    return res;
-                }).toList();
+            Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException("Image not found"));
+            if (image != null) {
+                ImageRes imageRes = modelMapper.map(image, ImageRes.class);
+                res.setImage(imageRes);
+            } else {
+                res.setImage(null);
+            }
+            return res;
+        }).toList();
         return productRes;
     }
 
     @Override
     public DetailProductRes getProductById(Long id) {
-        Product product = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + id));
+        Product product = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + id));
 
         DetailProductRes res = modelMapper.map(product, DetailProductRes.class);
 
@@ -127,9 +186,7 @@ public class ProductServiceImpl implements ProductService {
 
         List<Image> images = imageRepository.findByActionId(id, EActionType.PRODUCT);
         if (images != null && !images.isEmpty()) {
-            List<ImageRes> imageRes = images.stream()
-                    .map(image -> modelMapper.map(image, ImageRes.class))
-                    .collect(Collectors.toList());
+            List<ImageRes> imageRes = images.stream().map(image -> modelMapper.map(image, ImageRes.class)).collect(Collectors.toList());
             res.setImages(imageRes);
         } else {
             res.setImages(Collections.emptyList());
@@ -175,8 +232,7 @@ public class ProductServiceImpl implements ProductService {
         dbProduct.setProductType(req.getProductType());
 
         if (!dbProduct.getCharacter().getId().equals(req.getCharacterId())) {
-            Character character = characterRepository.findById(req.getCharacterId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân vật " + req.getCharacterId()));
+            Character character = characterRepository.findById(req.getCharacterId()).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân vật " + req.getCharacterId()));
             dbProduct.setCharacter(character);
         }
 
@@ -184,8 +240,7 @@ public class ProductServiceImpl implements ProductService {
         if (!dbTagIds.equals(req.getTagId())) {
             Set<Tag> tags = new HashSet<>();
             for (Long tagId : req.getTagId()) {
-                Tag tag = tagRepository.findById(tagId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tag với id: " + tagId));
+                Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tag với id: " + tagId));
                 tags.add(tag);
             }
             dbProduct.setTags(tags);
@@ -221,7 +276,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<?> getProductByCategory(Long tagId, Long characterId, Pageable pageable) {
-        Page<Product> products = productRepository.findByTagIdOrCharacterId(tagId,characterId,pageable);
+        Page<Product> products = productRepository.findByTagIdOrCharacterId(tagId, characterId, pageable);
         return toPageResponse(products);
     }
 

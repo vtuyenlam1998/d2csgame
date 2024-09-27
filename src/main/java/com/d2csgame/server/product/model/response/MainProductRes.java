@@ -6,9 +6,11 @@ import com.d2csgame.server.image.model.response.ImageRes;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Setter
 @Getter
-public class MainProductRes {
+public class MainProductRes implements Serializable {
     private Long id;
     private String name;
     private Double price;
