@@ -29,9 +29,24 @@ spring:
       timeout: 200
   cache:
     type: redis
+  kafka:
+    bootstrap-servers: localhost:29092
+
 server:
   port: 8080
 file:
   upload-dir:
     product: D://upload/product/
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  otlp:
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics
+        step: 10s
+  health:
+    mail:
+      enabled: false

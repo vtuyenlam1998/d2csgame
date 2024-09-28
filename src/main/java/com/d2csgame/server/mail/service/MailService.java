@@ -1,12 +1,15 @@
 package com.d2csgame.server.mail.service;
 
 import com.d2csgame.model.request.DataMailDTO;
+import com.google.gson.Gson;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,6 +73,36 @@ public class MailService {
         helper.setText(html, true);
         mailSender.send(mimeMessage);
         log.info("Email has been send to recipients info: {}", email);
+
+    }
+
+    @KafkaListener(topics = "confirm-account-topic",groupId = "confirm-account-group")
+    public void sendConfirmationEmailWithKafka(String message) throws MessagingException, UnsupportedEncodingException {
+        log.info("Sending link confirm to user...");
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, String>>(){}.getType();
+        Map<String, String> messageMap = gson.fromJson(message, type);
+
+        String email = messageMap.get("email");
+        String userId = messageMap.get("userId");
+        String secretCode = messageMap.get("secretCode");
+
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
+        Context context = new Context();
+        String linkConfirm = String.format("http://localhost:8080/api/v1/auth/confirm/%s/?secretCode=%s", userId, secretCode);
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("linkConfirm", linkConfirm);
+        context.setVariables(properties);
+
+        helper.setFrom(emailFrom, "D2CSGAME");
+        helper.setTo(email);
+        helper.setSubject("Please confirm your account");
+        String html = templateEngine.process("confirm-email.html", context);
+        helper.setText(html, true);
+        mailSender.send(mimeMessage);
+        log.info("Link confirm sent to recipients email: {}, linkConfirm: {}", email, linkConfirm);
 
     }
 }
