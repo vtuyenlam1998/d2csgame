@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class PageResponse<T> implements Serializable {
+@NoArgsConstructor
+public class PageResponse<T> {
     private int page;
     private int size;
     private long total;

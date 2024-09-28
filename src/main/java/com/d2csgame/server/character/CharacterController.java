@@ -6,6 +6,7 @@ import com.d2csgame.server.character.model.request.CreateCharacterReq;
 import com.d2csgame.server.character.service.CharacterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,14 @@ public class CharacterController {
         try {
             characterService.createAndEditCharacter(req);
             return new ResponseData<>(HttpStatus.CREATED.value(),"character created successfully");
+        } catch (Exception e) {
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        }
+    }
+    @GetMapping()
+    public ResponseData<?> getCharacters() {
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(),"characters list",characterService.findAll());
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }

@@ -24,30 +24,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,7 +80,8 @@ public class ProductServiceImpl implements ProductService {
 //    }
 
     @Override
-    @Cacheable(value = "homepageProducts", key = "#pageable")
+    @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize",
+            condition = "#pageable.pageNumber == 0", unless = "#result == null")
     public PageResponse<?> findAll(Pageable pageable) {
         // Check if it's the first page (homepage)
 //        if (pageable.getPageNumber() == 0) {
@@ -165,6 +156,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "productCache", key = "#id",unless = "#result == null")
     public DetailProductRes getProductById(Long id) {
         Product product = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + id));
 
@@ -196,6 +188,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public void createProduct(CreateProductReq req) throws IOException {
         Product product = modelMapper.map(req, Product.class);
 
@@ -223,6 +216,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     @Override
+    @CachePut(value = "productCache", key = "#req.id", unless="#result == null")
     public void editProduct(EditProductReq req) throws IOException {
         Product dbProduct = repository.findById(req.getId()).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + req.getCharacterId()));
         dbProduct.setName(req.getName());
@@ -269,9 +263,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProduct(Long productId) {
+    @CacheEvict(value = "productCache", beforeInvocation = false, key = "#id")
+    public void deleteProduct(Long id) {
         log.info("Deleted");
-        productRepository.deleteById(productId);
+        productRepository.deleteById(id);
     }
 
     @Override
