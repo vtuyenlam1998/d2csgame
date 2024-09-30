@@ -38,7 +38,7 @@ Before starting the application, ensure that you have the following installed on
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/d2csgame.git
+git clone https://github.com/vtuyenlam1998/d2csgame.git
 cd d2csgame
 ```
 
@@ -81,7 +81,7 @@ docker-compose down
 The application provides a set of RESTful APIs that can be accessed through `http://localhost:8080/api/`. More detailed API documentation can be found in the Swagger UI:
 
 ```bash
-http://localhost:8080/swagger-ui/
+http://localhost:8080/swagger-ui/index.html
 ```
 
 ## Real-time Notification System
