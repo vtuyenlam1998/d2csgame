@@ -1,10 +1,12 @@
 package com.d2csgame.model.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.io.Serializable;
 
+@Schema(name = "ResponseData", description = "Response data object")
 @Getter
 public class ResponseData<T>  implements Serializable {
     private final int status;
