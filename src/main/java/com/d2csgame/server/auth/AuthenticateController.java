@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,7 +50,7 @@ public class AuthenticateController {
             log.error("errorMessage={}", e.getMessage(),e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "user confirmation failure");
         } finally {
-            response.sendRedirect("http://localhost:3000");
+            response.sendRedirect("http://localhost:3001");
         }
     }
 

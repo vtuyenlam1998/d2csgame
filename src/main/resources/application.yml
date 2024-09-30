@@ -50,3 +50,19 @@ management:
   health:
     mail:
       enabled: false
+vnpay:
+  vnp_TmnCode: ${TMN_CODE:6HR41JF1}
+  vnp_HashSecret: ${SECRET_KEY:KTM41MMP5HBWDRO1P7Z7HYK35HMBH8I1}
+  vnp_PayUrl: ${PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  vnp_ReturnUrl: http://localhost:8080/api/v1/payment/vn-pay-callback
+  vnp_OrderType: ${ORDER_TYPE:other}
+  vnp_Command: ${COMMAND:pay}
+  vnp_Version: ${VERSION:2.1.0}
+  management:
+    address: https://sandbox.vnpayment.vn/merchantv2/
+    username: ${VNPAY_USERNAME:lam.shsoftvina@gmail.com}
+    password: ${VNPAY_PASSWORD:Tuyenlam1012}
+  IPN:
+    SIT: https://sandbox.vnpayment.vn/vnpaygw-sit-testing/user/login
+    username: ${VNPAY_USERNAME:lam.shsoftvina@gmail.com}
+    password: ${VNPAY_PASSWORD:Tuyenlam1012}
