@@ -66,3 +66,8 @@ vnpay:
     SIT: https://sandbox.vnpayment.vn/vnpaygw-sit-testing/user/login
     username: ${VNPAY_USERNAME:lam.shsoftvina@gmail.com}
     password: ${VNPAY_PASSWORD:Tuyenlam1012}
+
+paypal:
+  client-id: Ac-x_vF4K-pL1ETxW8HJurK3LWkRNbCJtif5Fl8tFCWfKrzYYyJ3M7WEDBzaOfOUEnQvUUj_tD7XhG-g
+  client-secret: EDwt7nOxIwUtzYHj5TbNwB1UlWHwfhfwfrHTjMGOa1oOiwgSaWP3nn-0xbohepK8XQMwTS0_qi5zQHjj
+  mode: sandbox # User 'sandbox' for testing and 'live' for production
