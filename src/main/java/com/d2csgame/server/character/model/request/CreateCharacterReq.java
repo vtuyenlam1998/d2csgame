@@ -5,7 +5,6 @@ import lombok.Getter;
 
 @Getter
 public class CreateCharacterReq {
-    private Long id;
     @NotBlank(message = "This field cannot be blank")
     private String name;
 }
