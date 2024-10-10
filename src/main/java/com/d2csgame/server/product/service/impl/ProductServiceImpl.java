@@ -140,7 +140,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<MainProductRes> findAll(String keyword) {
         List<Product> products = repository.findAll(keyword);
-        List<MainProductRes> productRes = products.stream().map(product -> {
+        return products.stream().map(product -> {
             MainProductRes res = modelMapper.map(product, MainProductRes.class);
 
             Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException("Image not found"));
@@ -152,7 +152,6 @@ public class ProductServiceImpl implements ProductService {
             }
             return res;
         }).toList();
-        return productRes;
     }
 
     @Override
