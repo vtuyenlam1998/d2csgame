@@ -4,6 +4,7 @@ import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
 import com.d2csgame.server.character.model.request.CreateCharacterReq;
 import com.d2csgame.server.character.service.CharacterService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CharacterController {
     private final CharacterService characterService;
     @PostMapping()
-    public ResponseData<?> createAndEditCharacter(@RequestBody final CreateCharacterReq req) {
+    public ResponseData<?> createAndEditCharacter(@Valid @RequestBody final CreateCharacterReq req) {
         try {
             characterService.createAndEditCharacter(req);
             return new ResponseData<>(HttpStatus.CREATED.value(),"character created successfully");
