@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.ConstraintViolationException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class GlobalExceptionHandler {
      */
 
     @ExceptionHandler({ConstraintViolationException.class,
-            MissingServletRequestParameterException.class, MethodArgumentNotValidException.class})
+            MissingServletRequestParameterException.class, MethodArgumentNotValidException.class, BadRequestException.class})
     @ResponseStatus(BAD_REQUEST)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "400", description = "Bad Request",
@@ -96,7 +97,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(NOT_FOUND)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "404", description = "Bad Request",
+            @ApiResponse(responseCode = "404", description = "Resource Not Found",
                     content = {@Content(mediaType = APPLICATION_JSON_VALUE,
                             examples = @ExampleObject(
                                     name = "404 Response",

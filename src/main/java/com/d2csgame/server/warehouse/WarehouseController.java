@@ -1,6 +1,5 @@
 package com.d2csgame.server.warehouse;
 
-import com.d2csgame.entity.Warehouse;
 import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
 import com.d2csgame.server.warehouse.service.WarehouseService;

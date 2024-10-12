@@ -1,18 +1,22 @@
 package com.d2csgame.aspectj;
 
-import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
 @Aspect
 @Component
-@Slf4j
 public class LoggingAspect {
+    private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
+
     @Around("execution(* com.d2csgame.server..*Controller.*(..))")
     public Object logControllerMethods(ProceedingJoinPoint joinPoint) throws Throwable {
         return logMethod(joinPoint, "Controller");
@@ -35,35 +39,35 @@ public class LoggingAspect {
             + " && !execution(* com.d2csgame.security.*(..))"
             + " && !execution(* com.d2csgame..*Controller.*(..))")
     public Object logClassAndMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        // Lấy tên class
         String className = joinPoint.getSignature().getDeclaringTypeName();
 
-        // Lấy tên method
         String methodName = joinPoint.getSignature().getName();
 
-        // Log thông tin
         log.info("Class: {}, Method: {}", className, methodName);
 
-        // Tiếp tục thực thi method
         return joinPoint.proceed();
     }
 
-    // Phương thức log dùng chung cho các pointcut
     private Object logMethod(ProceedingJoinPoint joinPoint, String layer) throws Throwable {
-        // Lấy tên class và method
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = ((MethodSignature) joinPoint.getSignature()).getMethod().getName();
 
-        // Lấy các tham số đầu vào
         Object[] args = joinPoint.getArgs();
         log.info("[{}] Entering method: {}.{}() with arguments = {}", layer, className, methodName, Arrays.toString(args));
 
-        // Thực thi phương thức
         Object result = joinPoint.proceed();
 
-        // Log kết quả trả về
         log.info("[{}] Method {}.{}() executed and returned: {}", layer, className, methodName, result);
 
         return result;
+    }
+
+    @AfterThrowing(pointcut = "execution(* com.d2csgame..*(..)) && !execution(* com.d2csgame.aspectj.LoggingAspect.*(..)) && !execution(* com.d2csgame.security.*(..))", throwing = "ex")
+    public void logAfterThrowing(JoinPoint joinPoint, Throwable ex) {
+        String methodName = joinPoint.getSignature().getName();
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+
+        log.error("Exception in {}.{}() with cause = {} and message = {}",
+                className, methodName, (ex.getCause() != null ? ex.getCause() : "NULL"), ex.getMessage());
     }
 }

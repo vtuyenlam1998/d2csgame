@@ -83,6 +83,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize",
             condition = "#pageable.pageNumber == 0", unless = "#result == null")
     public PageResponse<?> findAll(Pageable pageable) {
+        log.info("Find all products");
         // Check if it's the first page (homepage)
 //        if (pageable.getPageNumber() == 0) {
 //            // Kiểm tra xem Redis có sẵn không

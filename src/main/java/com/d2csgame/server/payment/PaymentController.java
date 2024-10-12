@@ -3,12 +3,18 @@ package com.d2csgame.server.payment;
 import com.d2csgame.model.request.VNPAYReq;
 import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
+import com.d2csgame.server.payment.model.OrderDetail;
+import com.d2csgame.server.payment.model.ReviewDetail;
 import com.d2csgame.server.payment.service.PaypalService;
 import com.d2csgame.server.payment.service.VnpayService;
 import com.paypal.api.payments.Links;
+import com.paypal.api.payments.PayerInfo;
 import com.paypal.api.payments.Payment;
+import com.paypal.api.payments.ShippingAddress;
+import com.paypal.api.payments.Transaction;
 import com.paypal.base.rest.PayPalRESTException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,39 +35,69 @@ public class PaymentController {
     private final PaypalService paypalService;
 
     @PostMapping("/paypal/create")
-    public RedirectView createPayment(@RequestParam("method") String method,
-                                      @RequestParam("amount") String amount,
-                                      @RequestParam("currency") String currency,
-                                      @RequestParam("description") String description
+    public RedirectView createPayment(
+            @RequestBody OrderDetail orderDetail,
+            @RequestParam("currency") String currency
     ) {
         try {
-            String cancelUrl = "http://localhost:8080/payment/cancel";
-            String successUrl = "http://localhost:8080/payment/success";
             Payment payment = paypalService.createPayment(
-                    Double.valueOf(amount),
                     currency,
-                    method,
-                    "sale",
-                    description,
-                    cancelUrl,
-                    successUrl
+                    "authorize",
+                    orderDetail
             );
 
             for (Links links : payment.getLinks()) {
-                if (links.getRel().equals("approval_url")) {
+                if (links.getRel().equalsIgnoreCase("approval_url")) {
                     return new RedirectView(links.getHref());
                 }
             }
         } catch (PayPalRESTException e) {
             log.error("Error occurred:: ", e);
         }
-        return new RedirectView("/payment/error");
+        return new RedirectView("http://localhost:3000/payment/error");
+    }
+
+    @GetMapping("/paypal/review_payment")
+    public ResponseData<ReviewDetail> paymentSuccess(
+            @RequestParam("paymentId") String paymentId,
+            @RequestParam("PayerID") String payerId
+    ) {
+        try {
+            Payment payment = paypalService.getPaymentDetails(paymentId);
+
+            PayerInfo payerInfo = payment.getPayer().getPayerInfo();
+
+            Transaction transaction = payment.getTransactions().get(0);
+            ShippingAddress shippingAddress = transaction.getItemList().getShippingAddress();
+            ReviewDetail reviewDetail = new ReviewDetail(payerInfo, transaction, shippingAddress);
+            return new ResponseData<>(HttpStatus.OK.value(), "Review Payment Details", reviewDetail);
+        } catch (PayPalRESTException e) {
+            log.error("Error occurred:: ", e);
+        }
+        return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Cant find payment details");
+    }
+
+    @PostMapping("/paypal/execute_payment")
+    public ResponseData<?> executePayment(@RequestParam("paymentId") String paymentId,
+                                          @RequestParam("PayerID") String payerId) {
+        try {
+            Payment payment = paypalService.executePayment(paymentId, payerId);
+            if (payment.getState().equals("approved")) {
+                PayerInfo payerInfo = payment.getPayer().getPayerInfo();
+                Transaction transaction = payment.getTransactions().get(0);
+                ReviewDetail reviewDetail = new ReviewDetail(payerInfo, transaction, null);
+                return new ResponseData<>(HttpStatus.OK.value(), "Payment Details", reviewDetail);
+            }
+        } catch (PayPalRESTException e) {
+            log.error("Error occurred:: ", e);
+        }
+        return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Could not execute payment");
     }
 
     @PostMapping("/vn-pay")
     public ResponseData<?> createPayment(HttpServletRequest request, @RequestBody VNPAYReq req) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), "Payment successfully",vnpayService.createPaymentUrl(request, req));
+            return new ResponseData<>(HttpStatus.OK.value(), "Payment successfully", vnpayService.createPaymentUrl(request, req));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Bad request");
         }
