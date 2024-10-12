@@ -1,7 +1,7 @@
 package com.d2csgame.server.warehouse.service;
 
-import com.d2csgame.entity.Warehouse;
+import com.d2csgame.entity.Account;
 
 public interface WarehouseService {
-    Warehouse getWarehouseById(Long id);
+    Account getWarehouseById(Long id);
 }

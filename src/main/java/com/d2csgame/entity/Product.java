@@ -14,11 +14,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -54,4 +56,7 @@ public class Product extends AbstractEntity<Long> {
     @JoinColumn(name = "character_id")
     @JsonBackReference
     private Character character;
+
+    @OneToMany(mappedBy = "product")
+    private List<AccountProduct> accountProducts;
 }

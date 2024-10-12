@@ -1,25 +1,25 @@
 services:
-#  d2csgame:
-#    build:
-#      context: ./
-#      dockerfile: Dockerfile
-#    container_name: d2csgame
-#    env_file:
-#      - .env
-#    ports:
-#      - '8080:8080'
-#    depends_on:
-#      - mysql
-#  mysql:
-#    container_name: mysql
-#    image: mysql
-#    environment:
-#      MYSQL_ROOT_PASSWORD: 123456
-#      MYSQL_DATABASE: d2csgame
-#    ports:
-#      - '3307:3306'
-#    volumes:
-#      - mysql_data:/var/lib/mysql
+  #  d2csgame:
+  #    build:
+  #      context: ./
+  #      dockerfile: Dockerfile
+  #    container_name: d2csgame
+  #    env_file:
+  #      - .env
+  #    ports:
+  #      - '8080:8080'
+  #    depends_on:
+  #      - mysql
+  #  mysql:
+  #    container_name: mysql
+  #    image: mysql
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: 123456
+  #      MYSQL_DATABASE: d2csgame
+  #    ports:
+  #      - '3307:3306'
+  #    volumes:
+  #      - mysql_data:/var/lib/mysql
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -56,39 +56,39 @@ services:
       timeout: 5s
       retries: 5
 
-#  collector:
-#    image: otel/opentelemetry-collector-contrib:0.82.0
-#    restart: always
-#    command:
-#      - --config=/etc/otelcol-contrib/config.yaml
-#    volumes:
-#      - ./docker/collector/otel-collector.yml:/etc/otelcol-contrib/config.yaml
-#    ports:
-#      - "1888:1888" #pprof extension
-#      - "4317:4317"
-#      - "4318:4318"
-#      - "8888:8888" #prometheus metrics exposed by the collector
-#      - "8889:8889" #prometheus exporter metrics
-#      - "13133:13133" #health_check extension
-#      - "55679:55679" #zpages extension
-#  prometheus:
-#    container_name: prometheus
-#    image: prom/prometheus
-#    restart: always
-##    extra_hosts:
-##      - host.docker.internal:host-gateway
-#    command:
-#      - --config.file=/etc/prometheus/prometheus.yml
-#    volumes:
-#      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-#    ports:
-#      - "9090:9090"
-#
-#  grafana:
-#    container_name: grafana
-#    image: grafana/grafana
-#    ports:
-#      - "3000:3000"
+  #  collector:
+  #    image: otel/opentelemetry-collector-contrib:0.82.0
+  #    restart: always
+  #    command:
+  #      - --config=/etc/otelcol-contrib/config.yaml
+  #    volumes:
+  #      - ./docker/collector/otel-collector.yml:/etc/otelcol-contrib/config.yaml
+  #    ports:
+  #      - "1888:1888" #pprof extension
+  #      - "4317:4317"
+  #      - "4318:4318"
+  #      - "8888:8888" #prometheus metrics exposed by the collector
+  #      - "8889:8889" #prometheus exporter metrics
+  #      - "13133:13133" #health_check extension
+  #      - "55679:55679" #zpages extension
+  #  prometheus:
+  #    container_name: prometheus
+  #    image: prom/prometheus
+  #    restart: always
+  ##    extra_hosts:
+  ##      - host.docker.internal:host-gateway
+  #    command:
+  #      - --config.file=/etc/prometheus/prometheus.yml
+  #    volumes:
+  #      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #    ports:
+  #      - "9090:9090"
+  #
+  #  grafana:
+  #    container_name: grafana
+  #    image: grafana/grafana
+  #    ports:
+  #      - "3000:3000"
 
   redis:
     image: redis:6.2-alpine
@@ -99,6 +99,96 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_DISABLE_COMMANDS=FLUSHDB;FLUSHALL
-#volumes:
-#  mysql_data:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=${CLUSTER_NAME}
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.enrollment.enabled=false
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    ports:
+      - ${ES_PORT}:9200
+    mem_limit: ${ES_MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    container_name: logstash
+    volumes:
+      - ./docker/logstash/pipeline:/usr/share/logstash/pipeline
+#      - logstash:/usr/share/logstash/data
+    environment:
+      - NODE_NAME=logstash
+      - xpack.monitoring.enabled=false
+      - xpack.monitoring.elasticsearch.hosts=["http://elasticsearch:9200"]
+    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    mem_limit: ${LS_MEM_LIMIT}
+    depends_on:
+      - elasticsearch
+      - kibana
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    environment:
+      - SERVERNAME=kibana
+      - cluster.name=${CLUSTER_NAME}
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - kibanadata:/usr/share/kibana/data
+    ports:
+      - ${KIBANA_PORT}:5601
+    mem_limit: ${KB_MEM_LIMIT}
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - elastic
+
+volumes:
+  es_data:
+    driver: local
+  kibanadata:
+    driver: local
+#  logstash:
 #    driver: local
+
+networks:
+  elastic:
+    driver: bridge
+  mysql_data:
+    driver: local
