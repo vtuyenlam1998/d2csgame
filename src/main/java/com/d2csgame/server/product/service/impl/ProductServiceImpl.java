@@ -1,5 +1,6 @@
 package com.d2csgame.server.product.service.impl;
 
+import com.d2csgame.config.Translator;
 import com.d2csgame.entity.Character;
 import com.d2csgame.entity.Image;
 import com.d2csgame.entity.Product;
@@ -19,6 +20,7 @@ import com.d2csgame.server.product.model.response.DetailProductRes;
 import com.d2csgame.server.product.model.response.MainProductRes;
 import com.d2csgame.server.product.ProductRepository;
 import com.d2csgame.server.product.service.ProductService;
+import com.d2csgame.server.warehouse.WarehouseRepository;
 import com.d2csgame.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,71 +49,22 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository repository;
     private final ImageRepository imageRepository;
     private final CharacterRepository characterRepository;
+    private final WarehouseRepository warehouseRepository;
     private final TagRepository tagRepository;
     private final ModelMapper modelMapper;
-    //    private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
-//    private static final String HOMEPAGE_CACHE_KEY = "homepageProducts";
 
     @Value("${file.upload-dir.product}")
     private String uploadDir;
-
-//    private static final int PING_TIMEOUT_MILLI_SECONDS = 10; // Thay đổi thời gian chờ nếu cần
-//
-//    private boolean isRedisAvailable() {
-//        ExecutorService executor = Executors.newSingleThreadExecutor();
-//        Future<Boolean> future = executor.submit(() -> {
-//            try {
-//                return redisTemplate.getConnectionFactory().getConnection().ping() != null;
-//            } catch (Exception e) {
-//                return false;
-//            }
-//        });
-//
-//        try {
-//            return future.get(PING_TIMEOUT_MILLI_SECONDS, TimeUnit.MILLISECONDS);
-//        } catch (TimeoutException e) {
-//            return false; // Nếu không nhận được phản hồi trong thời gian quy định
-//        } catch (InterruptedException | ExecutionException e) {
-//            return false; // Nếu có lỗi xảy ra trong quá trình thực thi
-//        } finally {
-//            executor.shutdown();
-//        }
-//    }
 
     @Override
     @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize",
             condition = "#pageable.pageNumber == 0", unless = "#result == null")
     public PageResponse<?> findAll(Pageable pageable) {
-        log.info("Find all products");
-        // Check if it's the first page (homepage)
-//        if (pageable.getPageNumber() == 0) {
-//            // Kiểm tra xem Redis có sẵn không
-//            try {
-//                // Check if cache exists for the homepage
-//                PageResponse<?> cachedPage = (PageResponse<?>) redisTemplate.opsForValue().get(HOMEPAGE_CACHE_KEY);
-//                if (cachedPage != null) {
-//                    return cachedPage; // Return cached response if available
-//                }
-//            } catch (Exception e) {
-//                // Log lỗi Redis, có thể không cần làm gì thêm ở đây
-//                log.error("Redis is not available", e);
-//            }
-//        }
-
         // Fetch from database if not cached or if it's not the first page
         Page<Product> products = repository.findAll(pageable);
         PageResponse<?> response = toPageResponse(products);
-        // Cache the first page response in Redis
-//        if (pageable.getPageNumber() == 0) {
-//            // Kiểm tra xem Redis có sẵn không
-//            try {
-//                redisTemplate.opsForValue().set(HOMEPAGE_CACHE_KEY, response, Duration.ofHours(1)); // Cache for 1 hour
-//            } catch (Exception e) {
-//                // Log lỗi Redis, có thể không cần làm gì thêm ở đây
-//                log.error("Redis is not available", e);
-//            }
-//        }
+
         return response;
     }
 
@@ -144,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
         return products.stream().map(product -> {
             MainProductRes res = modelMapper.map(product, MainProductRes.class);
 
-            Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException("Image not found"));
+            Image image = imageRepository.findByActionIdAndIsPrimary(product.getId(), EActionType.PRODUCT).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("image.not.found")));
             if (image != null) {
                 ImageRes imageRes = modelMapper.map(image, ImageRes.class);
                 res.setImage(imageRes);
@@ -158,7 +111,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Cacheable(value = "productCache", key = "#id",unless = "#result == null")
     public DetailProductRes getProductById(Long id) {
-        Product product = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + id));
+        Product product = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("product.not.found") + " " + id));
+        int quantity = warehouseRepository.getQuantityByProductId(product.getId());
 
         DetailProductRes res = modelMapper.map(product, DetailProductRes.class);
 
@@ -183,6 +137,7 @@ public class ProductServiceImpl implements ProductService {
         } else {
             res.setImages(Collections.emptyList());
         }
+        res.setQuantity(quantity);
         return res;
     }
 
@@ -192,12 +147,12 @@ public class ProductServiceImpl implements ProductService {
     public void createProduct(CreateProductReq req) throws IOException {
         Product product = modelMapper.map(req, Product.class);
 
-        Character character = characterRepository.findById(req.getCharacterId()).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân vật " + req.getCharacterId()));
+        Character character = characterRepository.findById(req.getCharacterId()).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("character.not.found") + " " + req.getCharacterId()));
         product.setCharacter(character);
 
         Set<Tag> tags = new HashSet<>();
         for (Long tagId : req.getTagId()) {
-            Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân vật " + req.getCharacterId()));
+            Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("tag.not.found") + " " + req.getCharacterId()));
             tags.add(tag);
         }
         product.setTags(tags);
@@ -218,7 +173,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CachePut(value = "productCache", key = "#req.id", unless="#result == null")
     public void editProduct(EditProductReq req) throws IOException {
-        Product dbProduct = repository.findById(req.getId()).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm " + req.getCharacterId()));
+        Product dbProduct = repository.findById(req.getId()).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("product.not.found") + " " + req.getCharacterId()));
         dbProduct.setName(req.getName());
         dbProduct.setDescription(req.getDescription());
         dbProduct.setPrice(req.getPrice());
@@ -226,7 +181,7 @@ public class ProductServiceImpl implements ProductService {
         dbProduct.setProductType(req.getProductType());
 
         if (!dbProduct.getCharacter().getId().equals(req.getCharacterId())) {
-            Character character = characterRepository.findById(req.getCharacterId()).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân vật " + req.getCharacterId()));
+            Character character = characterRepository.findById(req.getCharacterId()).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("character.not.found") + " " + req.getCharacterId()));
             dbProduct.setCharacter(character);
         }
 
@@ -234,7 +189,7 @@ public class ProductServiceImpl implements ProductService {
         if (!dbTagIds.equals(req.getTagId())) {
             Set<Tag> tags = new HashSet<>();
             for (Long tagId : req.getTagId()) {
-                Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tag với id: " + tagId));
+                Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("tag.not.found") + " " + tagId));
                 tags.add(tag);
             }
             dbProduct.setTags(tags);
@@ -265,7 +220,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CacheEvict(value = "productCache", beforeInvocation = false, key = "#id")
     public void deleteProduct(Long id) {
-        log.info("Deleted");
         productRepository.deleteById(id);
     }
 

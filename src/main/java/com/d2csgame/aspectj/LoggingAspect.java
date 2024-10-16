@@ -27,7 +27,7 @@ public class LoggingAspect {
         return logMethod(joinPoint, "Repository");
     }
 
-    @Around("execution(* com.d2csgame.server..service.impl.*(..))")
+    @Around("execution(* com.d2csgame.server..service.impl.*.*(..))")
     public Object logServiceMethods(ProceedingJoinPoint joinPoint) throws Throwable {
         return logMethod(joinPoint, "Service");
     }

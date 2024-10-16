@@ -68,7 +68,7 @@
 
     <springProperty name="log.level" source="logging.level.root" defaultValue="INFO"/>
 
-    <root level="${logging.level.root}">
+    <root level="${log.level}">
         <appender-ref ref="ASYNC"/>
         <appender-ref ref="LOGSTASH"/>
         <appender-ref ref="CONSOLE"/> <!-- Đảm bảo appender CONSOLE đã được định nghĩa -->

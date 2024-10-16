@@ -24,4 +24,5 @@ public class DetailProductRes {
     private EProductType productType;
     private CharacterRes character;
     private List<ImageRes> images = new ArrayList<>();
+    private int quantity;
 }
