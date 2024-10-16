@@ -1,5 +1,6 @@
 package com.d2csgame.server.product;
 
+import com.d2csgame.config.Translator;
 import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
 import com.d2csgame.server.product.model.request.CreateProductReq;
@@ -33,7 +34,7 @@ public class ProductController {
     @GetMapping
     public ResponseData<?> getAllProducts(@PageableDefault Pageable pageable) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), "list of product in homepage", productService.findAll(pageable));
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("product.homepage.list.found"), productService.findAll(pageable));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
@@ -43,7 +44,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseData<?> getProductById(@PathVariable Long id) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), "product detail", productService.getProductById(id));
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("product.detail.found"), productService.getProductById(id));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
@@ -54,7 +55,7 @@ public class ProductController {
     public ResponseData<?> createProduct(@Valid CreateProductReq req) {
         try {
             productService.createProduct(req);
-            return new ResponseData<>(HttpStatus.CREATED.value(), "product created");
+            return new ResponseData<>(HttpStatus.CREATED.value(), Translator.toLocale("product.create.success"));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
@@ -65,7 +66,7 @@ public class ProductController {
     public ResponseData<?> editProduct(@Valid EditProductReq req) {
         try {
             productService.editProduct(req);
-            return new ResponseData<>(HttpStatus.FOUND.value(), "product edited");
+            return new ResponseData<>(HttpStatus.FOUND.value(), Translator.toLocale("product.edit.success"));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
@@ -75,7 +76,7 @@ public class ProductController {
     public ResponseData<?> deleteProduct(@PathVariable("productId") Long productId) {
         try {
             productService.deleteProduct(productId);
-            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "product deleted");
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), Translator.toLocale("product.delete.success"));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
@@ -87,7 +88,7 @@ public class ProductController {
                                            @RequestParam(value = "characterId", required = false, defaultValue = "") Long characterId,
                                            @PageableDefault Pageable pageable) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), "list of product filter by category", productService.getProductByCategory(tagId, characterId, pageable));
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("product.list.filter.found"), productService.getProductByCategory(tagId, characterId, pageable));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 

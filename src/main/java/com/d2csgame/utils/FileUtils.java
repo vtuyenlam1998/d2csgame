@@ -1,8 +1,11 @@
 package com.d2csgame.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,9 +14,9 @@ import java.nio.file.Paths;
 @Slf4j
 public class FileUtils {
     public static String uploadImageToFileSystem(String uploadDirectory, MultipartFile file) throws IOException {
-        String fileName = file .getOriginalFilename();
+        String fileName = file.getOriginalFilename();
         String newFileName = generateTimestampedFileName(fileName);
-        Path filePath = Paths.get(uploadDirectory,newFileName);
+        Path filePath = Paths.get(uploadDirectory, newFileName);
         try {
             Path uploadPath = Paths.get(uploadDirectory);
             if (!Files.exists(uploadPath)) {
@@ -22,7 +25,7 @@ public class FileUtils {
             Files.write(filePath, file.getBytes());
             return filePath.toAbsolutePath().toString();
         } catch (Exception e) {
-            log.error("Lưu file không thành công: {}",e.getMessage());
+            log.error("Lưu file không thành công: {}", e.getMessage());
             throw e;
         }
     }
@@ -50,5 +53,9 @@ public class FileUtils {
 //        return files;
 //    }
 
-
+    public static MultipartFile[] convertFileToMultipartFile(File file) throws IOException {
+        FileInputStream input = new FileInputStream(file);
+        MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(), "application/pdf", input);
+        return new MultipartFile[]{multipartFile};
+    }
 }

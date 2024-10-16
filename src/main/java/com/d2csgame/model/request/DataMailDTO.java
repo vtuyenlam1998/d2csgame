@@ -15,4 +15,5 @@ public class DataMailDTO {
     @NotBlank(message = "content must not be blank")
     private String content;
     private MultipartFile[] files;
+    private String filePath;
 }

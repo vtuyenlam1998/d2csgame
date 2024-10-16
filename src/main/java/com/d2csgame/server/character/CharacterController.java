@@ -1,5 +1,6 @@
 package com.d2csgame.server.character;
 
+import com.d2csgame.config.Translator;
 import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
 import com.d2csgame.server.character.model.request.CreateCharacterReq;
@@ -22,7 +23,7 @@ public class CharacterController {
     public ResponseData<?> createAndEditCharacter(@Valid @RequestBody final CreateCharacterReq req) {
         try {
             characterService.createAndEditCharacter(req);
-            return new ResponseData<>(HttpStatus.CREATED.value(),"character created successfully");
+            return new ResponseData<>(HttpStatus.CREATED.value(), Translator.toLocale("character.create.success"));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
@@ -30,7 +31,7 @@ public class CharacterController {
     @GetMapping()
     public ResponseData<?> getCharacters() {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(),"characters list",characterService.findAll());
+            return new ResponseData<>(HttpStatus.OK.value(),Translator.toLocale("character.list.found"),characterService.findAll());
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }

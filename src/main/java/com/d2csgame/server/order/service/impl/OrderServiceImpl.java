@@ -9,10 +9,12 @@ import com.d2csgame.entity.User;
 import com.d2csgame.entity.enumration.EActionType;
 import com.d2csgame.entity.enumration.OrderStatus;
 import com.d2csgame.exception.ResourceNotFoundException;
+import com.d2csgame.model.request.DataMailDTO;
 import com.d2csgame.model.response.PageResponse;
 import com.d2csgame.server.cart.CartRepository;
 import com.d2csgame.server.image.ImageRepository;
 import com.d2csgame.server.image.model.response.ImageRes;
+import com.d2csgame.server.mail.service.MailService;
 import com.d2csgame.server.order.OrderRepository;
 import com.d2csgame.server.order.model.response.OrderItemRes;
 import com.d2csgame.server.order.model.response.OrderRes;
@@ -20,13 +22,20 @@ import com.d2csgame.server.order.service.OrderService;
 import com.d2csgame.server.product.model.response.MainProductRes;
 import com.d2csgame.server.user.UserRepository;
 import com.d2csgame.server.user.exception.UserNotFoundException;
+import com.d2csgame.utils.FileUtils;
+import com.google.gson.Gson;
+import com.itextpdf.text.DocumentException;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -41,13 +50,16 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
     private final ModelMapper modelMapper;
+    private final InvoiceService invoiceService;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public void checkoutCart() {
+    public void checkoutCart() throws DocumentException, IOException, MessagingException {
         User currentUser = userRepository.findById(1L).orElseThrow(() -> new UserNotFoundException("User not found"));
         Cart cart = cartRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         Order order = new Order();
         order.setUser(currentUser);
         order.setOrderDate(LocalDateTime.now());
+        order.setPaymentDate(LocalDateTime.now());
         order.setStatus(OrderStatus.PAID);
         for (CartItem cartItem : cart.getItems()) {
             OrderItem orderItem = new OrderItem();
@@ -61,6 +73,15 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(calculateTotal(cart));
         orderRepository.save(order);
         cartRepository.delete(cart);
+        String filePath = invoiceService.generateInvoice(order);
+        DataMailDTO dto = new DataMailDTO();
+        dto.setSubject("Order Invoice");
+        dto.setContent("Dear customer,\n\nPlease find attached your order invoice.");
+        dto.setRecipients(currentUser.getEmail());
+        dto.setFilePath(filePath);
+        Gson gson = new Gson();
+        String jsonMessage = gson.toJson(dto);
+        kafkaTemplate.send("send-email-topic", jsonMessage);
     }
 
     private Double calculateTotal(Cart cart) {

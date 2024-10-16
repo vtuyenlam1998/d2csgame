@@ -34,14 +34,28 @@ spring:
 
 server:
   port: 8080
+  #Thread pool
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+    max-connections: 1000
+    accept-count: 100
+
 file:
   upload-dir:
     product: D://upload/product/
+    image: D://upload/image/
+    user: D://upload/user/
+    character: D://upload/character/
+    post: D://upload/post/
+    invoice: D://upload/invoice/
+
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics,info,env
 #  otlp:
 #    metrics:
 #      export:

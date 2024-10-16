@@ -4,4 +4,5 @@ import com.d2csgame.entity.Account;
 
 public interface WarehouseService {
     Account getWarehouseById(Long id);
+    int getQuantityByProductId(Long productId);
 }

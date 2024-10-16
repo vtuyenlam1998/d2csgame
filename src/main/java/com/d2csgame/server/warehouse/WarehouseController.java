@@ -1,5 +1,6 @@
 package com.d2csgame.server.warehouse;
 
+import com.d2csgame.config.Translator;
 import com.d2csgame.model.response.ResponseData;
 import com.d2csgame.model.response.ResponseError;
 import com.d2csgame.server.warehouse.service.WarehouseService;
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/warehouse")
 public class WarehouseController {
     private final WarehouseService warehouseService;
-    @GetMapping("/{id}")
-    public ResponseData<?> getWarehouseById(@PathVariable Long id) {
+    @GetMapping("/{productId}")
+    public ResponseData<?> getQuantityByProductId(@PathVariable Long productId) {
         try {
-            return new ResponseData<>(HttpStatus.OK.value(),"Quantity product has found", warehouseService.getWarehouseById(id));
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("product.quantity.found"), warehouseService.getQuantityByProductId(productId));
         } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }

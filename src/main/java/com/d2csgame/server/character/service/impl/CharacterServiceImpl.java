@@ -32,7 +32,6 @@ public class CharacterServiceImpl implements CharacterService {
     @Override
     @Cacheable(value = "characterCache", key = "1")
     public List<CharacterRes> findAll() {
-        log.info("Fetching characters from database");
         List<Character> characters = characterRepository.findAll();
         // Không được đổi thành .toList() sẽ gây ra lỗi trên redis vì có thể lần query đầu tiên .toList() đã làm thay đổi kiểu dữ liệu List<CharacterRes> thành unmodified List rồi nên nó sẽ không mapping được.
         return characters.stream().map(character -> modelMapper.map(character, CharacterRes.class)).collect(Collectors.toList());
