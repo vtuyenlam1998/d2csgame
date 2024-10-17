@@ -32,11 +32,11 @@ public class LoggingAspect {
         return logMethod(joinPoint, "Service");
     }
 
-    @Around("execution(* com.d2csgame..*(..))"
+    @Around("execution(* com.d2csgame..*.*(..))"
             + " && !execution(* com.d2csgame..*Repository.*(..))"
             + " && !execution(* com.d2csgame..*Service.*(..))"
             + " && !execution(* com.d2csgame.aspectj.LoggingAspect.*(..))"
-            + " && !execution(* com.d2csgame.security.*(..))"
+            + " && !execution(* com.d2csgame.security..*(..))"
             + " && !execution(* com.d2csgame..*Controller.*(..))")
     public Object logClassAndMethod(ProceedingJoinPoint joinPoint) throws Throwable {
         String className = joinPoint.getSignature().getDeclaringTypeName();
@@ -62,12 +62,17 @@ public class LoggingAspect {
         return result;
     }
 
-    @AfterThrowing(pointcut = "execution(* com.d2csgame..*(..)) && !execution(* com.d2csgame.aspectj.LoggingAspect.*(..)) && !execution(* com.d2csgame.security.*(..))", throwing = "ex")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable ex) {
-        String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getTarget().getClass().getSimpleName();
+    @Around("execution(* com.d2csgame..*.*(..)) && !within(com.d2csgame.aspectj..*) && !within(com.d2csgame.security..*)")
+    public Object traceErrorMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+        try {
+            return joinPoint.proceed();
+        } catch (Throwable t) {
+            String methodName = joinPoint.getSignature().getName();
+            String className = joinPoint.getTarget().getClass().getSimpleName();
 
-        log.error("Exception in {}.{}() with cause = {} and message = {}",
-                className, methodName, (ex.getCause() != null ? ex.getCause() : "NULL"), ex.getMessage());
+            log.error("Exception in {}.{}() with cause = {} and message = {}",
+                    className, methodName, (t.getCause() != null ? t.getCause() : "NULL"), t.getMessage());
+            throw t;
+        }
     }
 }

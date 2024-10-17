@@ -10,16 +10,16 @@ services:
   #      - '8080:8080'
   #    depends_on:
   #      - mysql
-  #  mysql:
-  #    container_name: mysql
-  #    image: mysql
-  #    environment:
-  #      MYSQL_ROOT_PASSWORD: 123456
-  #      MYSQL_DATABASE: d2csgame
-  #    ports:
-  #      - '3307:3306'
-  #    volumes:
-  #      - mysql_data:/var/lib/mysql
+#  mysql:
+#    container_name: mysql
+#    image: mysql
+#    environment:
+#      MYSQL_ROOT_PASSWORD: 123456
+#      MYSQL_DATABASE: d2csgame
+#    ports:
+#      - '3307:3306'
+#    volumes:
+#      - mysql_data:/var/lib/mysql
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -138,6 +138,7 @@ services:
     container_name: logstash
     volumes:
       - ./docker/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./docker/logstash/vendor/jar:/usr/share/logstash/vendor/jar
 #      - logstash:/usr/share/logstash/data
     environment:
       - NODE_NAME=logstash
@@ -183,6 +184,8 @@ volumes:
   es_data:
     driver: local
   kibanadata:
+    driver: local
+  mysql_data:
     driver: local
 #  logstash:
 #    driver: local

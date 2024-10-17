@@ -24,4 +24,5 @@ public interface ProductService {
     void deleteProduct(Long productId);
 
     PageResponse<?> getProductByCategory(Long tagId, Long characterId, Pageable pageable);
+
 }

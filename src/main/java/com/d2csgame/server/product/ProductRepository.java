@@ -4,6 +4,7 @@ import com.d2csgame.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,4 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "AND (:characterId IS NULL OR c.id = :characterId)")
     Page<Product> findByTagIdOrCharacterId(Long tagId, Long characterId, Pageable pageable);
 
+    @Modifying
+    @Query("UPDATE Product p SET p.isDeleted = true, p.deletedDate = CURRENT_TIMESTAMP WHERE p.id = :id")
+    void deleteByProductId(Long id);
 }

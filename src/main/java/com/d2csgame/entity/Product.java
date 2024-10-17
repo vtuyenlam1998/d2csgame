@@ -18,7 +18,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,4 +62,10 @@ public class Product extends AbstractEntity<Long> {
 
     @OneToMany(mappedBy = "product")
     private List<AccountProduct> accountProducts;
+
+    @Column(name = "is_deleted",columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean isDeleted;
+
+    @Column(name = "deleted_date", columnDefinition = "DATETIME(6)")
+    private Instant deletedDate;
 }
