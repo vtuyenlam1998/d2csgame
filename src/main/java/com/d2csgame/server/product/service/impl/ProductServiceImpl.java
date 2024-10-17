@@ -4,6 +4,7 @@ import com.d2csgame.config.Translator;
 import com.d2csgame.entity.Character;
 import com.d2csgame.entity.Image;
 import com.d2csgame.entity.Product;
+import com.d2csgame.entity.ProductES;
 import com.d2csgame.entity.Tag;
 import com.d2csgame.entity.enumration.EActionType;
 import com.d2csgame.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import com.d2csgame.server.hashtag.TagRepository;
 import com.d2csgame.server.hashtag.model.response.TagRes;
 import com.d2csgame.server.image.ImageRepository;
 import com.d2csgame.server.image.model.response.ImageRes;
+import com.d2csgame.server.product.ProductESRepository;
 import com.d2csgame.server.product.model.request.CreateProductReq;
 import com.d2csgame.server.product.model.request.EditProductReq;
 import com.d2csgame.server.product.model.response.DetailProductRes;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository repository;
     private final ImageRepository imageRepository;
@@ -56,6 +59,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Value("${file.upload-dir.product}")
     private String uploadDir;
+
 
     @Override
     @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize",
@@ -141,7 +145,6 @@ public class ProductServiceImpl implements ProductService {
         return res;
     }
 
-    @Transactional
     @Override
     @CacheEvict(value = "products", allEntries = true)
     public void createProduct(CreateProductReq req) throws IOException {
@@ -169,7 +172,6 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @Transactional
     @Override
     @CachePut(value = "productCache", key = "#req.id", unless="#result == null")
     public void editProduct(EditProductReq req) throws IOException {
@@ -220,7 +222,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CacheEvict(value = "productCache", beforeInvocation = false, key = "#id")
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+//        productRepository.deleteById(id);
+        productRepository.deleteByProductId(id);
     }
 
     @Override
@@ -228,5 +231,6 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> products = productRepository.findByTagIdOrCharacterId(tagId, characterId, pageable);
         return toPageResponse(products);
     }
+
 
 }

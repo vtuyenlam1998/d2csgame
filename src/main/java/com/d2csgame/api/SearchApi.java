@@ -19,4 +19,5 @@ public class SearchApi {
     public ResponseEntity<Map<String, Object>> searchGlobal(@Param("keyword") String keyword) {
         return ResponseEntity.ok(searchService.searchGlobal(keyword));
     }
+
 }

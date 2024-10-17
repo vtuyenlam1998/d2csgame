@@ -1,8 +1,14 @@
 package com.d2csgame.service.impl;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import com.d2csgame.entity.ProductES;
 import com.d2csgame.server.product.model.response.MainProductRes;
 import com.d2csgame.server.product.service.ProductService;
 import com.d2csgame.service.SearchService;
+import org.elasticsearch.client.RequestOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
