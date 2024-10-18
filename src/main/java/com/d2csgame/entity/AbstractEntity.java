@@ -25,11 +25,11 @@ public abstract class AbstractEntity<T extends Serializable> implements Serializ
 
     @Column(name = "created_date", updatable = false)
     @CreatedDate
-    private Instant createdDate = Instant.now();
+    private Instant createdDate;
 
     @Column(name = "last_modified_date")
     @LastModifiedDate
-    private Instant lastModifiedDate = Instant.now();
+    private Instant lastModifiedDate;
 
     @Column(name = "created_by", updatable = false)
     @CreatedBy
