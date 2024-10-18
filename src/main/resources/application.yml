@@ -35,7 +35,7 @@ spring:
     uris: localhost:9200
 
 server:
-  port: 8080
+  port: 8443
   #Thread pool
   tomcat:
     threads:
@@ -43,6 +43,11 @@ server:
       min-spare: 20
     max-connections: 1000
     accept-count: 100
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: d2csgame
+    key-store-type: PKCS12
+    key-alias: d2csgame--ssl-key
 
 file:
   upload-dir:

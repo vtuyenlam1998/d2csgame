@@ -30,6 +30,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .requiresChannel(channel -> channel.anyRequest().requiresSecure())// Bắt buộc tất cả request phải đi qua HTTPS
+                .headers(headers -> headers.httpStrictTransportSecurity(hsts ->
+                        hsts
+                                .includeSubDomains(true)  // Áp dụng HSTS cho tất cả các subdomain
+                                .maxAgeInSeconds(31536000)  // HSTS có hiệu lực trong 1 năm (31536000 giây)
+                ))
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfiguration()))
                 .authorizeHttpRequests(
